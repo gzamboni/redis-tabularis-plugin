@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "tabularis": {
+      "command": "/Applications/tabularis.app/Contents/MacOS/tabularis",
+      "args": [
+        "--mcp"
+      ]
+    }
+  }
+}

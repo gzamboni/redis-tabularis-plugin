@@ -1,0 +1,23 @@
+{
+  "id": "redis",
+  "name": "Redis",
+  "version": "0.1.0",
+  "description": "Tabularis driver for Redis databases",
+  "default_port": 6379,
+  "default_username": "default",
+  "executable": "redis-tabularis-plugin",
+  "capabilities": {
+    "schemas": false,
+    "views": false,
+    "routines": false,
+    "file_based": false,
+    "identifier_quote": "\"",
+    "alter_primary_key": false
+  },
+  "data_types": [
+    { "name": "STRING", "category": "string", "requires_length": false, "requires_precision": false },
+    { "name": "INTEGER", "category": "numeric", "requires_length": false, "requires_precision": false },
+    { "name": "BOOLEAN", "category": "other", "requires_length": false, "requires_precision": false },
+    { "name": "JSON", "category": "json", "requires_length": false, "requires_precision": false }
+  ]
+}
