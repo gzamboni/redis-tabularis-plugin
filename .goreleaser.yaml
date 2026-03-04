@@ -1,0 +1,31 @@
+version: 2
+
+project_name: redis-tabularis-plugin
+
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./main.go
+    binary: redis-tabularis-plugin
+
+archives:
+  - format: zip
+    name_template: "redis-tabularis-plugin-{{ .Os }}-{{ .Arch }}"
+    files:
+      - manifest.json
+      - README.md
+      - LICENSE
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
