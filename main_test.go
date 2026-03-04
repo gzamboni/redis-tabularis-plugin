@@ -90,8 +90,8 @@ func TestGetColumns(t *testing.T) {
 	resp := runRequest(t, req)
 	
 	columns, ok := resp.Result.([]interface{})
-	if !ok || len(columns) != 3 {
-		t.Errorf("Expected 3 columns for keys table, got %v", resp.Result)
+	if !ok || len(columns) != 4 {
+		t.Errorf("Expected 4 columns for keys table, got %v", resp.Result)
 	}
 }
 

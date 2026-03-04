@@ -120,6 +120,7 @@ func getTableColumns(table string) []map[string]interface{} {
 			{"name": "key", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
 			{"name": "type", "data_type": "STRING", "is_pk": false, "is_nullable": false, "is_auto_increment": false},
 			{"name": "ttl", "data_type": "INTEGER", "is_pk": false, "is_nullable": false, "is_auto_increment": false},
+			{"name": "value", "data_type": "STRING", "is_pk": false, "is_nullable": true, "is_auto_increment": false},
 		}
 	case "hashes":
 		return []map[string]interface{}{
@@ -136,12 +137,12 @@ func getTableColumns(table string) []map[string]interface{} {
 	case "sets":
 		return []map[string]interface{}{
 			{"name": "key", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
-			{"name": "member", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
+			{"name": "value", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
 		}
 	case "zsets":
 		return []map[string]interface{}{
 			{"name": "key", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
-			{"name": "member", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
+			{"name": "value", "data_type": "STRING", "is_pk": true, "is_nullable": false, "is_auto_increment": false},
 			{"name": "score", "data_type": "NUMERIC", "is_pk": false, "is_nullable": false, "is_auto_increment": false},
 		}
 	}
@@ -265,12 +266,41 @@ func executeScanKeys(p ConnectionParams, page, pageSize int) map[string]interfac
 	for _, k := range pagedKeys {
 		typ, _ := client.Type(ctx, k).Result()
 		ttl, _ := client.TTL(ctx, k).Result()
-		rows = append(rows, []interface{}{k, typ, int64(ttl.Seconds())})
+		
+		var valStr string
+		switch typ {
+		case "string":
+			valStr, _ = client.Get(ctx, k).Result()
+		case "hash":
+			val, _ := client.HGetAll(ctx, k).Result()
+			b, _ := json.Marshal(val)
+			valStr = string(b)
+		case "list":
+			val, _ := client.LRange(ctx, k, 0, -1).Result()
+			b, _ := json.Marshal(val)
+			valStr = string(b)
+		case "set":
+			val, _ := client.SMembers(ctx, k).Result()
+			b, _ := json.Marshal(val)
+			valStr = string(b)
+		case "zset":
+			val, _ := client.ZRangeWithScores(ctx, k, 0, -1).Result()
+			var zVals []map[string]interface{}
+			for _, z := range val {
+				zVals = append(zVals, map[string]interface{}{"value": z.Member, "score": z.Score})
+			}
+			b, _ := json.Marshal(zVals)
+			valStr = string(b)
+		default:
+			valStr = fmt.Sprintf("<%s>", typ)
+		}
+		
+		rows = append(rows, []interface{}{k, typ, int64(ttl.Seconds()), valStr})
 	}
 	
 	hasMore := endIdx < total
 	return map[string]interface{}{
-		"columns":       []string{"key", "type", "ttl"},
+		"columns":       []string{"key", "type", "ttl", "value"},
 		"rows":          rows,
 		"affected_rows": 0,
 		"truncated":     hasMore,
@@ -417,7 +447,7 @@ func executeScanSets(p ConnectionParams, query string, page, pageSize int) map[s
 	pagedRows, hasMore, total := paginateRows(rows, page, pageSize)
 
 	return map[string]interface{}{
-		"columns": []string{"key", "member"},
+		"columns": []string{"key", "value"},
 		"rows": pagedRows,
 		"affected_rows": 0,
 		"truncated": hasMore,
@@ -457,7 +487,7 @@ func executeScanZSets(p ConnectionParams, query string, page, pageSize int) map[
 	pagedRows, hasMore, total := paginateRows(rows, page, pageSize)
 
 	return map[string]interface{}{
-		"columns": []string{"key", "member", "score"},
+		"columns": []string{"key", "value", "score"},
 		"rows": pagedRows,
 		"affected_rows": 0,
 		"truncated": hasMore,
