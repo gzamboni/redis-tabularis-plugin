@@ -304,9 +304,11 @@ The plugin supports INSERT, UPDATE, and DELETE operations that translate SQL sta
 Add new data to Redis using SQL INSERT statements:
 
 ```sql
--- Insert a string key
+-- Insert a string key (with optional TTL in seconds)
 INSERT INTO keys (key, value) VALUES ('user:1', 'John Doe')
 -- Redis: SET user:1 "John Doe"
+INSERT INTO keys (key, value, ttl) VALUES ('session:1', 'active', 3600)
+-- Redis: SET session:1 "active" EX 3600
 
 -- Insert hash fields
 INSERT INTO hashes (key, field, value) VALUES ('user:1', 'name', 'John'), ('user:1', 'email', 'john@example.com')

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/alicebob/miniredis/v2"
 )
@@ -56,7 +57,7 @@ func TestTestConnection(t *testing.T) {
 	}
 
 	resp := runRequest(t, req)
-	
+
 	result, ok := resp.Result.(map[string]interface{})
 	if !ok || result["success"] != true {
 		t.Errorf("Expected success=true, got %v", resp.Result)
@@ -72,7 +73,7 @@ func TestGetTables(t *testing.T) {
 	}
 
 	resp := runRequest(t, req)
-	
+
 	tables, ok := resp.Result.([]interface{})
 	if !ok || len(tables) != 5 {
 		t.Errorf("Expected 5 tables, got %v", resp.Result)
@@ -88,7 +89,7 @@ func TestGetColumns(t *testing.T) {
 	}
 
 	resp := runRequest(t, req)
-	
+
 	columns, ok := resp.Result.([]interface{})
 	if !ok || len(columns) != 4 {
 		t.Errorf("Expected 4 columns for keys table, got %v", resp.Result)
@@ -104,12 +105,12 @@ func TestExecuteQueryKeys(t *testing.T) {
 	s.HSet("myhash", "f1", "v1")
 
 	paramsJSON, _ := json.Marshal(map[string]interface{}{
-		"params": params,
-		"query": "SELECT * FROM keys",
-		"page": 0,
+		"params":    params,
+		"query":     "SELECT * FROM keys",
+		"page":      0,
 		"page_size": 10,
 	})
-	
+
 	req := Request{
 		JSONRPC: "2.0",
 		ID:      json.RawMessage(`4`),
@@ -118,7 +119,7 @@ func TestExecuteQueryKeys(t *testing.T) {
 	}
 
 	resp := runRequest(t, req)
-	
+
 	result, ok := resp.Result.(map[string]interface{})
 	if !ok {
 		t.Fatalf("Expected object result, got %v", resp.Result)
@@ -139,12 +140,12 @@ func TestExecuteQueryHashes(t *testing.T) {
 	s.HSet("myhash", "field2", "value2")
 
 	paramsJSON, _ := json.Marshal(map[string]interface{}{
-		"params": params,
-		"query": "SELECT * FROM hashes WHERE key = 'myhash'",
-		"page": 0,
+		"params":    params,
+		"query":     "SELECT * FROM hashes WHERE key = 'myhash'",
+		"page":      0,
 		"page_size": 10,
 	})
-	
+
 	req := Request{
 		JSONRPC: "2.0",
 		ID:      json.RawMessage(`5`),
@@ -153,7 +154,7 @@ func TestExecuteQueryHashes(t *testing.T) {
 	}
 
 	resp := runRequest(t, req)
-	
+
 	result, ok := resp.Result.(map[string]interface{})
 	if !ok {
 		t.Fatalf("Expected object result, got %v", resp.Result)
@@ -162,5 +163,45 @@ func TestExecuteQueryHashes(t *testing.T) {
 	rows, ok := result["rows"].([]interface{})
 	if !ok || len(rows) != 2 {
 		t.Errorf("Expected 2 rows from hashes, got %v", result["rows"])
+	}
+}
+
+func TestExecuteInsertKeysWithTTL(t *testing.T) {
+	s, params := setupTestDB(t)
+	defer s.Close()
+
+	paramsJSON, _ := json.Marshal(map[string]interface{}{
+		"params": params,
+		"query":  "INSERT INTO keys (key, value, ttl) VALUES ('testkey', 'testval', 60)",
+	})
+
+	req := Request{
+		JSONRPC: "2.0",
+		ID:      json.RawMessage(`5`),
+		Method:  "execute_query",
+		Params:  paramsJSON,
+	}
+
+	resp := runRequest(t, req)
+
+	result, ok := resp.Result.(map[string]interface{})
+	if !ok {
+		t.Fatalf("Expected object result, got %v", resp.Result)
+	}
+
+	affectedRows, ok := result["affected_rows"].(float64)
+	if !ok || affectedRows != 1 {
+		t.Errorf("Expected 1 affected row, got %v", result["affected_rows"])
+	}
+
+	// Verify key was inserted with correct TTL
+	s.FastForward(30 * time.Second)
+	if !s.Exists("testkey") {
+		t.Errorf("Expected testkey to exist after 30 seconds")
+	}
+
+	s.FastForward(35 * time.Second)
+	if s.Exists("testkey") {
+		t.Errorf("Expected testkey to expire after 60 seconds")
 	}
 }

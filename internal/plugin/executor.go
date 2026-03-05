@@ -98,7 +98,7 @@ string]interface{}, conditions []QueryCondition) bool {
 	return true
 }
 
-func applyLimitOffset(rows [][]interface// applyLimitOffset applies LIMIT and OFFSET to rows
+func applyLimitOffset(rows [][]interface // applyLimitOffset applies LIMIT and OFFSET to rows
 {
 
 }, limit, offset int) [][]interface{} {
@@ -113,7 +113,7 @@ func applyLimitOffset(rows [][]interface// applyLimitOffset applies LIMIT and OF
 	return rows[start:end]
 }
 
-func applyOrderBy(rows [][]interface// applyOrderBy sorts rows based on ORDER BY clauses
+func applyOrderBy(rows [][]interface // applyOrderBy sorts rows based on ORDER BY clauses
 {
 
 }, columns []string, orderBy []OrderBy) [][]interface{} {
@@ -473,11 +473,35 @@ string]interface{} {
 	affectedRows := 0
 	switch parser.Table {
 	case "keys":
+		keyIdx, valIdx, ttlIdx := -1, -1, -1
+		if len(parser.Columns) > 0 {
+			for i, col := range parser.Columns {
+				if col == "key" {
+					keyIdx = i
+				} else if col == "value" {
+					valIdx = i
+				} else if col == "ttl" {
+					ttlIdx = i
+				}
+			}
+		} else {
+			keyIdx, valIdx = 0, 1
+			if len(parser.Values) > 0 && len(parser.Values[0]) >= 3 {
+				ttlIdx = 2
+			}
+		}
+
 		for _, values := range parser.Values {
-			if len(values) >= 2 {
-				key := values[0]
-				value := values[1]
-				err := client.Set(ctx, key, value, 0).Err()
+			if keyIdx >= 0 && valIdx >= 0 && keyIdx < len(values) && valIdx < len(values) {
+				key := values[keyIdx]
+				value := values[valIdx]
+				var ttl time.Duration = 0
+				if ttlIdx >= 0 && ttlIdx < len(values) {
+					if t, err := strconv.Atoi(values[ttlIdx]); err == nil && t > 0 {
+						ttl = time.Duration(t) * time.Second
+					}
+				}
+				err := client.Set(ctx, key, value, ttl).Err()
 				if err == nil {
 					affectedRows++
 				}
