@@ -1,6 +1,6 @@
 import re
 
-with open('main.go', 'r') as f:
+with open('internal/plugin/executor.go', 'r') as f:
     content = f.read()
 
 # Hashes
@@ -183,5 +183,5 @@ new_zset = """func executeScanZSets(p ConnectionParams, query string, page, page
 	}"""
 content = content.replace(old_zset, new_zset)
 
-with open('main.go', 'w') as f:
+with open('internal/plugin/executor.go', 'w') as f:
     f.write(content)

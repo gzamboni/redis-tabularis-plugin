@@ -2,7 +2,7 @@
 set -e
 
 echo "Building plugin..."
-go build -o redis-tabularis-plugin main.go
+go build -o redis-tabularis-plugin ./cmd/redis-tabularis-plugin
 
 echo "Starting Redis via Docker..."
 # Use port 6380 to avoid conflicts with any local Redis instance
@@ -44,6 +44,41 @@ if echo "$RESULT_3" | grep -q '"myvalue"'; then
     echo "✅ execute_query (hashes) passed"
 else
     echo "❌ execute_query (hashes) failed: $RESULT_3"
+    exit 1
+fi
+
+echo "Test 4: update_record (value and TTL)"
+# Update value and set TTL to 100
+echo '{"jsonrpc":"2.0","id":4,"method":"update_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key", "col_name":"value", "new_val":"updated_hello"}}' | ./redis-tabularis-plugin > /dev/null
+echo '{"jsonrpc":"2.0","id":5,"method":"update_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key", "col_name":"ttl", "new_val":100}}' | ./redis-tabularis-plugin > /dev/null
+
+# Verify update
+RESULT_4=$(docker exec $CONTAINER_ID redis-cli get e2e_key)
+TTL_4=$(docker exec $CONTAINER_ID redis-cli ttl e2e_key)
+if [ "$RESULT_4" == "updated_hello" ] && [ "$TTL_4" -gt 0 ]; then
+    echo "✅ update_record (value and TTL) passed"
+else
+    echo "❌ update_record failed: value=$RESULT_4, ttl=$TTL_4"
+    exit 1
+fi
+
+echo "Test 5: insert_record (hash)"
+echo '{"jsonrpc":"2.0","id":6,"method":"insert_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"hashes", "data":{"key":"e2e_new_hash", "field":"new_field", "value":"new_value"}}}' | ./redis-tabularis-plugin > /dev/null
+RESULT_5=$(docker exec $CONTAINER_ID redis-cli hget e2e_new_hash new_field)
+if [ "$RESULT_5" == "new_value" ]; then
+    echo "✅ insert_record (hash) passed"
+else
+    echo "❌ insert_record failed: $RESULT_5"
+    exit 1
+fi
+
+echo "Test 6: delete_record (key)"
+echo '{"jsonrpc":"2.0","id":7,"method":"delete_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key"}}' | ./redis-tabularis-plugin > /dev/null
+RESULT_6=$(docker exec $CONTAINER_ID redis-cli exists e2e_key)
+if [ "$RESULT_6" == "0" ]; then
+    echo "✅ delete_record (key) passed"
+else
+    echo "❌ delete_record failed: $RESULT_6"
     exit 1
 fi
 
