@@ -1,6 +1,6 @@
 version: 2
 
-project_name: redis-tabularis-plugin
+project_name: tabularis-redis-plugin-go
 
 builds:
   - env:
@@ -12,12 +12,12 @@ builds:
     goarch:
       - amd64
       - arm64
-    main: ./cmd/redis-tabularis-plugin
-    binary: redis-tabularis-plugin
+    main: ./cmd/tabularis-redis-plugin-go
+    binary: tabularis-redis-plugin-go
 
 archives:
   - format: zip
-    name_template: "redis-tabularis-plugin-{{ .Os }}-{{ .Arch }}"
+    name_template: "tabularis-redis-plugin-go-{{ .Os }}-{{ .Arch }}"
     files:
       - manifest.json
       - README.md

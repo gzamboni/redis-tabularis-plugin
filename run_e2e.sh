@@ -2,7 +2,7 @@
 set -e
 
 echo "Building plugin..."
-go build -o redis-tabularis-plugin ./cmd/redis-tabularis-plugin
+go build -o tabularis-redis-plugin-go ./cmd/tabularis-redis-plugin-go
 
 echo "Starting Redis via Docker..."
 # Use port 6380 to avoid conflicts with any local Redis instance
@@ -21,7 +21,7 @@ docker exec $CONTAINER_ID redis-cli hset e2e_hash myfield "myvalue" > /dev/null
 echo "Running E2E tests..."
 
 echo "Test 1: test_connection"
-RESULT_1=$(echo '{"jsonrpc":"2.0","id":1,"method":"test_connection","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}}}' | ./redis-tabularis-plugin)
+RESULT_1=$(echo '{"jsonrpc":"2.0","id":1,"method":"test_connection","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}}}' | ./tabularis-redis-plugin-go)
 if echo "$RESULT_1" | grep -q '"success":true'; then
     echo "✅ test_connection passed"
 else
@@ -30,7 +30,7 @@ else
 fi
 
 echo "Test 2: execute_query (keys)"
-RESULT_2=$(echo '{"jsonrpc":"2.0","id":2,"method":"execute_query","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "query":"SELECT * FROM keys", "page":0, "page_size":10}}' | ./redis-tabularis-plugin)
+RESULT_2=$(echo '{"jsonrpc":"2.0","id":2,"method":"execute_query","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "query":"SELECT * FROM keys", "page":0, "page_size":10}}' | ./tabularis-redis-plugin-go)
 if echo "$RESULT_2" | grep -q '"e2e_key"'; then
     echo "✅ execute_query (keys) passed"
 else
@@ -39,7 +39,7 @@ else
 fi
 
 echo "Test 3: execute_query (hashes)"
-RESULT_3=$(echo '{"jsonrpc":"2.0","id":3,"method":"execute_query","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "query":"SELECT * FROM hashes WHERE key = '"'e2e_hash'"'", "page":0, "page_size":10}}' | ./redis-tabularis-plugin)
+RESULT_3=$(echo '{"jsonrpc":"2.0","id":3,"method":"execute_query","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "query":"SELECT * FROM hashes WHERE key = '"'e2e_hash'"'", "page":0, "page_size":10}}' | ./tabularis-redis-plugin-go)
 if echo "$RESULT_3" | grep -q '"myvalue"'; then
     echo "✅ execute_query (hashes) passed"
 else
@@ -49,8 +49,8 @@ fi
 
 echo "Test 4: update_record (value and TTL)"
 # Update value and set TTL to 100
-echo '{"jsonrpc":"2.0","id":4,"method":"update_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key", "col_name":"value", "new_val":"updated_hello"}}' | ./redis-tabularis-plugin > /dev/null
-echo '{"jsonrpc":"2.0","id":5,"method":"update_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key", "col_name":"ttl", "new_val":100}}' | ./redis-tabularis-plugin > /dev/null
+echo '{"jsonrpc":"2.0","id":4,"method":"update_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key", "col_name":"value", "new_val":"updated_hello"}}' | ./tabularis-redis-plugin-go > /dev/null
+echo '{"jsonrpc":"2.0","id":5,"method":"update_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key", "col_name":"ttl", "new_val":100}}' | ./tabularis-redis-plugin-go > /dev/null
 
 # Verify update
 RESULT_4=$(docker exec $CONTAINER_ID redis-cli get e2e_key)
@@ -63,7 +63,7 @@ else
 fi
 
 echo "Test 5: insert_record (hash)"
-echo '{"jsonrpc":"2.0","id":6,"method":"insert_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"hashes", "data":{"key":"e2e_new_hash", "field":"new_field", "value":"new_value"}}}' | ./redis-tabularis-plugin > /dev/null
+echo '{"jsonrpc":"2.0","id":6,"method":"insert_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"hashes", "data":{"key":"e2e_new_hash", "field":"new_field", "value":"new_value"}}}' | ./tabularis-redis-plugin-go > /dev/null
 RESULT_5=$(docker exec $CONTAINER_ID redis-cli hget e2e_new_hash new_field)
 if [ "$RESULT_5" == "new_value" ]; then
     echo "✅ insert_record (hash) passed"
@@ -73,7 +73,7 @@ else
 fi
 
 echo "Test 6: delete_record (key)"
-echo '{"jsonrpc":"2.0","id":7,"method":"delete_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key"}}' | ./redis-tabularis-plugin > /dev/null
+echo '{"jsonrpc":"2.0","id":7,"method":"delete_record","params":{"params":{"driver":"redis","host":"localhost","port":6380,"database":"0"}, "table":"keys", "pk_col":"key", "pk_val":"e2e_key"}}' | ./tabularis-redis-plugin-go > /dev/null
 RESULT_6=$(docker exec $CONTAINER_ID redis-cli exists e2e_key)
 if [ "$RESULT_6" == "0" ]; then
     echo "✅ delete_record (key) passed"

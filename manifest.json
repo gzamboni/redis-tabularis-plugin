@@ -5,7 +5,7 @@
   "description": "Tabularis driver for Redis databases",
   "default_port": 6379,
   "default_username": "default",
-  "executable": "redis-tabularis-plugin",
+  "executable": "tabularis-redis-plugin-go",
   "capabilities": {
     "schemas": false,
     "views": false,

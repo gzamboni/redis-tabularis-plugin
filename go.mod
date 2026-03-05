@@ -1,4 +1,4 @@
-module github.com/gzamboni/redis-tabularis-plugin
+module github.com/gzamboni/tabularis-redis-plugin-go
 
 go 1.19
 

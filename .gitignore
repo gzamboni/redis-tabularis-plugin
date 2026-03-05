@@ -1,4 +1,4 @@
-/redis-tabularis-plugin
+/tabularis-redis-plugin-go
 *-linux-amd64
 *-darwin-arm64
 *.exe

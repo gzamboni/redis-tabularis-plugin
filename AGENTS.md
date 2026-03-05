@@ -26,8 +26,8 @@ This is a [Tabularis](https://github.com/debba/tabularis) plugin that enables ex
 - **Build Tool:** GoReleaser for cross-platform releases
 
 ### Repository
-- **URL:** `github.com/gzamboni/redis-tabularis-plugin`
-- **Module Path:** `github.com/gzamboni/redis-tabularis-plugin`
+- **URL:** `github.com/gzamboni/tabularis-redis-plugin-go`
+- **Module Path:** `github.com/gzamboni/tabularis-redis-plugin-go`
 
 ## Architecture & Key Components
 
@@ -40,8 +40,8 @@ Tabularis → stdin → Plugin → Redis → Plugin → stdout → Tabularis
 ```
 
 **Key Points:**
-- **Main Entry Point:** [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin) contains the main loop and all request handlers
-- **Request/Response Types:** Defined in [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin) as Go structs
+- **Main Entry Point:** [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go) contains the main loop and all request handlers
+- **Request/Response Types:** Defined in [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go) as Go structs
 - **Protocol:** JSON-RPC 2.0 with newline-delimited messages
 - **Error Handling:** All errors must return valid JSON-RPC error responses
 
@@ -101,7 +101,7 @@ Since Redis is a key-value store, it is mapped to virtual tables for SQL-like qu
   "version": "0.1.0",
   "description": "Tabularis driver for Redis databases",
   "default_port": 6379,
-  "executable": "redis-tabularis-plugin",
+  "executable": "tabularis-redis-plugin-go",
   "capabilities": {
     "schemas": false,
     "views": false,
@@ -135,8 +135,8 @@ type ConnectionParams struct {
 ## File Structure
 
 ```
-redis-tabularis-plugin/
-├── ./cmd/redis-tabularis-plugin              # Main plugin logic and JSON-RPC handlers
+tabularis-redis-plugin-go/
+├── ./cmd/tabularis-redis-plugin-go              # Main plugin logic and JSON-RPC handlers
 ├── main_test.go         # Unit tests using miniredis
 ├── manifest.json        # Plugin metadata for Tabularis
 ├── go.mod               # Go module definition
@@ -159,12 +159,12 @@ redis-tabularis-plugin/
 
 ```bash
 # Standard build
-go build -o redis-tabularis-plugin ./cmd/redis-tabularis-plugin
+go build -o tabularis-redis-plugin-go ./cmd/tabularis-redis-plugin-go
 
 # Cross-platform builds
-GOOS=linux GOARCH=amd64 go build -o redis-tabularis-plugin-linux-amd64 ./cmd/redis-tabularis-plugin
-GOOS=darwin GOARCH=arm64 go build -o redis-tabularis-plugin-darwin-arm64 ./cmd/redis-tabularis-plugin
-GOOS=windows GOARCH=amd64 go build -o redis-tabularis-plugin-windows-amd64.exe ./cmd/redis-tabularis-plugin
+GOOS=linux GOARCH=amd64 go build -o tabularis-redis-plugin-go-linux-amd64 ./cmd/tabularis-redis-plugin-go
+GOOS=darwin GOARCH=arm64 go build -o tabularis-redis-plugin-go-darwin-arm64 ./cmd/tabularis-redis-plugin-go
+GOOS=windows GOARCH=amd64 go build -o tabularis-redis-plugin-go-windows-amd64.exe ./cmd/tabularis-redis-plugin-go
 ```
 
 ### Manual Testing
@@ -173,16 +173,16 @@ Test the plugin by piping JSON-RPC requests:
 
 ```bash
 # Test connection
-echo '{"jsonrpc":"2.0","id":1,"method":"test_connection","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"}}}' | ./redis-tabularis-plugin
+echo '{"jsonrpc":"2.0","id":1,"method":"test_connection","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"}}}' | ./tabularis-redis-plugin-go
 
 # Get databases
-echo '{"jsonrpc":"2.0","id":2,"method":"get_databases","params":{"params":{"driver":"redis","host":"localhost","port":6379}}}' | ./redis-tabularis-plugin
+echo '{"jsonrpc":"2.0","id":2,"method":"get_databases","params":{"params":{"driver":"redis","host":"localhost","port":6379}}}' | ./tabularis-redis-plugin-go
 
 # Get tables
-echo '{"jsonrpc":"2.0","id":3,"method":"get_tables","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"}}}' | ./redis-tabularis-plugin
+echo '{"jsonrpc":"2.0","id":3,"method":"get_tables","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"}}}' | ./tabularis-redis-plugin-go
 
 # Execute query
-echo '{"jsonrpc":"2.0","id":4,"method":"execute_query","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"},"query":"SELECT * FROM keys"}}' | ./redis-tabularis-plugin
+echo '{"jsonrpc":"2.0","id":4,"method":"execute_query","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"},"query":"SELECT * FROM keys"}}' | ./tabularis-redis-plugin-go
 ```
 
 ### Local Development Setup
@@ -190,8 +190,8 @@ echo '{"jsonrpc":"2.0","id":4,"method":"execute_query","params":{"params":{"driv
 1. **Install Go 1.19+**
 2. **Clone the repository:**
    ```bash
-   git clone https://github.com/gzamboni/redis-tabularis-plugin.git
-   cd redis-tabularis-plugin
+   git clone https://github.com/gzamboni/tabularis-redis-plugin-go.git
+   cd tabularis-redis-plugin-go
    ```
 3. **Install dependencies:**
    ```bash
@@ -208,7 +208,7 @@ To install the plugin for local development and testing in Tabularis:
 
 1. **Build the plugin:**
    ```bash
-   go build -o redis-tabularis-plugin ./cmd/redis-tabularis-plugin
+   go build -o tabularis-redis-plugin-go ./cmd/tabularis-redis-plugin-go
    ```
 
 2. **Create the plugin directory in Tabularis's data folder:**
@@ -229,19 +229,19 @@ To install the plugin for local development and testing in Tabularis:
 3. **Copy the plugin files to the directory:**
    ```bash
    # Linux
-   cp redis-tabularis-plugin ~/.local/share/tabularis/plugins/redis/
+   cp tabularis-redis-plugin-go ~/.local/share/tabularis/plugins/redis/
    cp manifest.json ~/.local/share/tabularis/plugins/redis/
    cp README.md ~/.local/share/tabularis/plugins/redis/
    cp LICENSE ~/.local/share/tabularis/plugins/redis/
    
    # macOS
-   cp redis-tabularis-plugin ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/
+   cp tabularis-redis-plugin-go ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/
    cp manifest.json ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/
    cp README.md ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/
    cp LICENSE ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/
    
    # Windows (PowerShell)
-   Copy-Item redis-tabularis-plugin.exe "$env:APPDATA\com.debba.tabularis\plugins\redis\"
+   Copy-Item tabularis-redis-plugin-go.exe "$env:APPDATA\com.debba.tabularis\plugins\redis\"
    Copy-Item manifest.json "$env:APPDATA\com.debba.tabularis\plugins\redis\"
    Copy-Item README.md "$env:APPDATA\com.debba.tabularis\plugins\redis\"
    Copy-Item LICENSE "$env:APPDATA\com.debba.tabularis\plugins\redis\"
@@ -250,10 +250,10 @@ To install the plugin for local development and testing in Tabularis:
 4. **On Linux/macOS, make the executable runnable:**
    ```bash
    # Linux
-   chmod +x ~/.local/share/tabularis/plugins/redis/redis-tabularis-plugin
+   chmod +x ~/.local/share/tabularis/plugins/redis/tabularis-redis-plugin-go
    
    # macOS
-   chmod +x ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/redis-tabularis-plugin
+   chmod +x ~/Library/Application\ Support/com.debba.tabularis/plugins/redis/tabularis-redis-plugin-go
    ```
 
 5. **Restart Tabularis** (or install via Settings to hot-reload without restart)
@@ -266,7 +266,7 @@ To install the plugin for local development and testing in Tabularis:
 ```bash
 #!/bin/bash
 # Build the plugin
-go build -o redis-tabularis-plugin ./cmd/redis-tabularis-plugin
+go build -o tabularis-redis-plugin-go ./cmd/tabularis-redis-plugin-go
 
 # Determine plugin directory based on OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -277,8 +277,8 @@ fi
 
 # Create directory and copy files
 mkdir -p "$PLUGIN_DIR"
-cp redis-tabularis-plugin manifest.json README.md LICENSE "$PLUGIN_DIR/"
-chmod +x "$PLUGIN_DIR/redis-tabularis-plugin"
+cp tabularis-redis-plugin-go manifest.json README.md LICENSE "$PLUGIN_DIR/"
+chmod +x "$PLUGIN_DIR/tabularis-redis-plugin-go"
 
 echo "Plugin installed to: $PLUGIN_DIR"
 echo "Restart Tabularis to use the plugin."
@@ -411,7 +411,7 @@ git push origin v0.2.0
 
 **Example:** Adding a `streams` table for Redis Streams
 
-1. **Update `get_tables` handler in [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin):**
+1. **Update `get_tables` handler in [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go):**
    ```go
    tables = append(tables, map[string]interface{}{
        "name": "streams",
@@ -472,7 +472,7 @@ The plugin implements an **enhanced SQL parser** with comprehensive query suppor
 
 **Implementation Details:**
 
-The query parser is located in [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin) and consists of:
+The query parser is located in [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go) and consists of:
 
 1. **`parseQuery(query string) QueryParser`** - Main parser function
    - Extracts table name from FROM clause
@@ -537,9 +537,9 @@ SELECT * FROM zsets WHERE score >= 50 AND score <= 200 ORDER BY score DESC LIMIT
 
 **When Extending Query Support:**
 
-1. **Locate parsing logic** in [`parseQuery()`](./cmd/redis-tabularis-plugin:169) and [`parseCondition()`](./cmd/redis-tabularis-plugin:236)
+1. **Locate parsing logic** in [`parseQuery()`](./cmd/tabularis-redis-plugin-go:169) and [`parseCondition()`](./cmd/tabularis-redis-plugin-go:236)
 2. **Add new operators** to the `operators` slice in `parseCondition()`
-3. **Implement operator logic** in [`matchesConditions()`](./cmd/redis-tabularis-plugin:270)
+3. **Implement operator logic** in [`matchesConditions()`](./cmd/tabularis-redis-plugin-go:270)
 4. **Update tests** in [`main_test.go`](main_test.go) with new test cases
 5. **Document** in [`README.md`](README.md) and this file
 
@@ -568,7 +568,7 @@ go test -v ./...
 
 2. **Test with manual requests:**
    ```bash
-   echo '{"jsonrpc":"2.0","id":1,"method":"test_connection","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"}}}' | ./redis-tabularis-plugin 2>debug.log
+   echo '{"jsonrpc":"2.0","id":1,"method":"test_connection","params":{"params":{"driver":"redis","host":"localhost","port":6379,"database":"0"}}}' | ./tabularis-redis-plugin-go 2>debug.log
    ```
 
 3. **Check error responses:**
@@ -579,7 +579,7 @@ go test -v ./...
 
 **Example:** Adding TLS support
 
-1. **Update `ConnectionParams` struct in [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin):**
+1. **Update `ConnectionParams` struct in [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go):**
    ```go
    type ConnectionParams struct {
        // ... existing fields
@@ -635,7 +635,7 @@ go test -v ./...
    - Consider `LIMIT` clauses to prevent large result sets
 
 2. **Code Organization:**
-   - Keep all logic in [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin) (single-file plugin)
+   - Keep all logic in [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go) (single-file plugin)
    - Use helper functions for complex operations
    - Document non-obvious logic with comments
 
@@ -673,7 +673,7 @@ go test -v ./...
 1. Check for panics or crashes
 2. Validate JSON-RPC response structure
 3. Remove any stdout debug prints
-4. Test manually with `echo | ./redis-tabularis-plugin`
+4. Test manually with `echo | ./tabularis-redis-plugin-go`
 
 #### Issue: Connection to Redis fails
 
@@ -736,5 +736,5 @@ go test -v ./...
 **For Questions or Issues:**
 - Review [`README.md`](README.md) for user documentation
 - Check existing tests in [`main_test.go`](main_test.go) for examples
-- Examine [`./cmd/redis-tabularis-plugin`](./cmd/redis-tabularis-plugin) for implementation details
+- Examine [`./cmd/tabularis-redis-plugin-go`](./cmd/tabularis-redis-plugin-go) for implementation details
 - Consult [Tabularis documentation](https://github.com/debba/tabularis)
